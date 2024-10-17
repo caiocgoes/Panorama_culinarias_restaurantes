@@ -12,6 +12,26 @@ from streamlit_folium import folium_static
 
 #----funções----#
 
+def reviews_by_restaurants(df):
+   restaurantecommaiorquantidadedeavaliacoes = df.loc[:,["Votes","Restaurant Name"]].groupby("Restaurant Name").sum().sort_values('Votes',ascending=False).reset_index().head(10)
+   restaurantecommaiorquantidadedeavaliacoes.columns = ["Restaurante","Quantidade de avaliações"]
+   fig_1 = px.bar(restaurantecommaiorquantidadedeavaliacoes, x="Restaurante", y="Quantidade de avaliações")
+   return fig_1
+def average_rating_by_restaurants(df):
+   restaurantecommaiornotamedia = df.loc[:,["Aggregate rating","Restaurant Name"]].groupby("Restaurant Name").agg({"Aggregate rating":["mean","std"]}).reset_index().head(10)
+   restaurantecommaiornotamedia.columns = ["Restaurante","Nota Média","Desvio Padrão"]
+   fig_2 = px.bar(restaurantecommaiornotamedia, x="Restaurante", y="Nota Média")
+   return fig_2
+def average_price_for_two_by_restaurants(df):
+   restaurantepratoparaduaspessoas = df.loc[:,["Average Cost for two","Restaurant Name"]].groupby("Restaurant Name").agg({"Average Cost for two":["mean","std"]}).reset_index().head(10)
+   restaurantepratoparaduaspessoas.columns = ["Restaurante","Custo médio prato para duas pessoas","Desvio Padrão"]
+   fig_3 = px.bar(restaurantepratoparaduaspessoas.sort_values('Custo médio prato para duas pessoas',ascending=False), x = 'Restaurante', y = 'Custo médio prato para duas pessoas')
+   return fig_3
+def unique_cuisines_by_restaurants(df):
+   restaurantescomculinariasdistintas = df.loc[:,["Cuisines","Restaurant Name"]].groupby("Restaurant Name").nunique().reset_index().head(10)
+   restaurantescomculinariasdistintas.columns = ["Restaurante","Quantidade_culinarias_distintas"]
+   fig_4 = px.bar(restaurantescomculinariasdistintas.sort_values('Quantidade_culinarias_distintas',ascending=False),x='Restaurante',y='Quantidade_culinarias_distintas')
+   return fig_4
 def restaurants_unique(df):
    restaurantes_unicos = df["Restaurant ID"].nunique()
    return restaurantes_unicos
@@ -103,3 +123,25 @@ with tab1:
           st.metric("Culinarias unicas cadastradas",Cuisines_unique(df))
        with col5:
           st.metric("Avaliações registradas",Rating_unique(df))
+with tab2:
+   with st.container():
+      col1, col2 = st.columns(2)
+      with col1:
+         fig_1 = reviews_by_restaurants(df)
+         st.markdown("""Quantidade de avaliações por restaurante - Top 10 restaurantes""")
+         st.plotly_chart(fig_1, use_container_width=True)
+      with col2:
+         fig_2 = unique_cuisines_by_restaurants(df)
+         st.markdown("""Nota média por restaurante - Top 10 restaurantes""")
+         st.plotly_chart(fig_2, use_container_width=True)
+   with st.container():
+      col1, col2 = st.columns(2)
+      with col1:
+         fig_3 = average_rating_by_restaurants(df)
+         st.markdown("""Custo médio prato para duas pessoas por restaurante""")
+         st.plotly_chart(fig_3, use_container_width=True)
+      with col2:
+         fig_4 = average_price_for_two_by_restaurants(df)
+         st.markdown("""Quantidade de culinarias distintas por restaurante - Top 10 restaurantes""")
+         st.plotly_chart(fig_4, use_container_width=True)
+
