@@ -11,7 +11,8 @@ from streamlit_folium import folium_static
 #======
 
 #----funções----#
-
+   
+#   return mapa
 def reviews_by_restaurants(df):
    restaurantecommaiorquantidadedeavaliacoes = df.loc[:,["Votes","Restaurant Name"]].groupby("Restaurant Name").sum().sort_values('Votes',ascending=False).reset_index().head(10)
    restaurantecommaiorquantidadedeavaliacoes.columns = ["Restaurante","Quantidade de avaliações"]
@@ -123,6 +124,42 @@ with tab1:
           st.metric("Culinarias unicas cadastradas",Cuisines_unique(df))
        with col5:
           st.metric("Avaliações registradas",Rating_unique(df))
+   with st.container():
+       latitude_media = df['Latitude'].mean()
+       longitude_media = df['Longitude'].mean()
+
+       mapa = folium.Map(location=[latitude_media, longitude_media], zoom_start=12)
+      
+       def definir_cor(aggregate_rating):
+          if aggregate_rating >= 4.5:
+             return 'darkgreen'
+          elif 4.0 <= aggregate_rating < 4.5:
+             return 'green'
+          elif 3.5 <= aggregate_rating < 4.0:
+             return 'lightgreen'
+          elif 3.0 <= aggregate_rating < 3.5:
+             return 'orange'
+          elif 2.5 <= aggregate_rating < 3.0:
+             return 'red'
+          else:
+             return 'darkred'
+
+#Função para definir a cor com base em uma coluna (por exemplo, 'Aggregate rating')
+       for index,row in df.iterrows():
+           cor = definir_cor(row['Aggregate rating'])
+           folium.Marker(
+           location=[row['Latitude'], row['Longitude']],
+           popup=row['Restaurant Name'],  
+           icon=folium.Icon(color=cor)
+       ).add_to(mapa)
+
+       mapa.save('mapa_restaurantes.html')
+      
+       st.markdown("""Quantidade de avaliações por restaurante - Top 10 restaurantes""")
+
+       folium_static(mapa)
+      
+       
 with tab2:
    with st.container():
       col1, col2 = st.columns(2)
